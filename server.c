@@ -91,11 +91,12 @@ int main()
 		/* If something happened on the master socket , then its an incoming connection */
         if(FD_ISSET(sockfd, &readfds))
         {
-        	char rec[32];
+        	char rec[100];
         	int check = 0;
             clientfd = accept(sockfd, (struct sockaddr*)&dest, (socklen_t*)&addrlen);
 
 			recv(clientfd, rec, sizeof(rec), 0);
+printf("%s\n", rec);
 			
 			/* sign in '*' */
 			if(rec[0] == '*')
@@ -282,6 +283,31 @@ int main()
 					send(clientfd, "1", sizeof("1"), 0);
 				}
 			}
+			/* testVM ip port "(" */
+			else if(rec[0] == '(')
+			{
+				char *VM, q[1024], port[10];
+				extern FILE *popen();
+				FILE *pp;
+
+				for(i=0; i<strlen(rec); i++)
+					rec[i] = rec[i+1];
+
+				VM = strtok(rec, "/");
+				
+				if(strcmp(VM, "win7t") == 0 || strcmp(VM, "ut") == 0)
+				{
+					sprintf(q, "virsh start %s", VM);
+					popen(q, "r");
+					sprintf(q, "virsh vncdisplay %s", VM);
+					pp = popen(q, "r");
+					fgets(port, sizeof port, pp);
+					pclose(pp);
+					send(clientfd, port, sizeof(port), 0);
+				}
+				else
+					send(clientfd, "0", sizeof("0"), 0);
+			}
 			/* fast install '$' */
 			else if(rec[0] == '$')
 			{
@@ -318,8 +344,9 @@ int main()
 					send(clientfd, "1", sizeof("1"), 0);
 					sprintf(q, "INSERT INTO %sVM(VMname) VALUES('%s')", id, VMname);
 					if (mysql_query(con, q)) finish_with_error(con);
-					sprintf(q, "virt-clone --connect=qemu:///system -o %s -n %s_%s -f /var/lib/libvirt/images/%s_%s.img", VM, id, VMname, id, VMname);
+					sprintf(q, "virt-clone --connect=qemu:///system -o %s -n %s_%s -f /var/lib/libvirt/images/%s_%s.img &", VM, id, VMname, id, VMname);
 					popen(q, "r");
+					printf("123\n");
 				}
 			}
 			/* clone VM '@' */
@@ -378,10 +405,11 @@ int main()
 				id = strtok(rec, "+");
 				VMname = strtok(NULL, "/");
 
-				sprintf(q, "delete from %sVM where id='%s'", id, VMname);
+				sprintf(q, "delete from %sVM where VMname='%s'", id, VMname);
 				if (mysql_query(con, q)) finish_with_error(con);
 
 				sprintf(q, "virsh undefine %s_%s", id, VMname);
+				popen(q, "r");
 
 				send(clientfd, "1", sizeof("1"), 0);
 			}
@@ -469,22 +497,25 @@ printf("%s\n", rec);
 				fclose(fp1);
 				fclose(fp2);
 
-				fp1 = fopen("crontab/crontab", "r");
-				fp2 = fopen("crontab/list2", "r");
-				fp3 = fopen("crontab/list3", "w");
-					
-				while((ch=getc(fp1)) != EOF)
-					fprintf(fp3, "%c", ch);
+				if(strcmp(work, "add") == 0 || strcmp(work, "radd") == 0 || strcmp(work, "del") == 0 || strcmp(work, "rdel") == 0)
+				{
+					fp1 = fopen("crontab/crontab", "r");
+					fp2 = fopen("crontab/list2", "r");
+					fp3 = fopen("crontab/list3", "w");
 
-				while((ch=getc(fp2)) != EOF)
-					fprintf(fp3, "%c", ch);
+					while((ch=getc(fp1)) != EOF)
+						fprintf(fp3, "%c", ch);
 
-				fclose(fp1);
-				fclose(fp2);
-				fclose(fp3);
+					while((ch=getc(fp2)) != EOF)
+						fprintf(fp3, "%c", ch);
 
-				popen("cp crontab/list2 crontab/list1", "r");
-				popen("cp crontab/list3 /etc/crontab", "r");
+					fclose(fp1);
+					fclose(fp2);
+					fclose(fp3);
+
+					popen("cp crontab/list2 crontab/list1", "r");
+					popen("cp crontab/list3 /etc/crontab", "r");
+				}
 
 				send(clientfd, "1", sizeof("1"), 0);
 			}
