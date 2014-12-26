@@ -118,7 +118,7 @@ int main()
 				
 				if (result == NULL)
   				{
-     				finish_with_error(con);
+     					finish_with_error(con);
   				}
 
 				while ((row = mysql_fetch_row(result)))
