@@ -26,20 +26,18 @@ int main()
 
 	if (con == NULL)
  	{
-    	fprintf(stderr, "mysql_init() failed\n");
-    	exit(1);
+ 	   	fprintf(stderr, "mysql_init() failed\n");
+    		exit(1);
   	}  
   
   	if (mysql_real_connect(con, "localhost", "root", "x94u4cl6", "mysql", 0, NULL, 0) == NULL) 
  	{
-    	finish_with_error(con);
+    		finish_with_error(con);
  	}
 
 	int sockfd, num = 0, user[10] = {0}, opt = 1, clientfd, i, j;
 	int addrlen, max = 10, sd, max_sd, activity, busy[10] = {0};
 	struct sockaddr_in dest;
-	char buffer[] = "---------------Welcome to chatroom!---------------";
-	char name[10][10], friend[10][10], ban[10][10], msg[128], online[128];
 
 	/* set of socket descriptors */
 	fd_set readfds;
@@ -65,38 +63,38 @@ int main()
 	while(1)
 	{
 		/* clear the socket set */
-        FD_ZERO(&readfds);
+ 	       FD_ZERO(&readfds);
   
-        /* add master socket to set */
-        FD_SET(sockfd, &readfds);
-        max_sd = sockfd;
+        	/* add master socket to set */
+        	FD_SET(sockfd, &readfds);
+        	max_sd = sockfd;
 
 		for(i=0; i<max; i++)
-        {
-            /* socket descriptor */
-            sd = user[i];
+        	{
+            		/* socket descriptor */
+            		sd = user[i];
              
-            /* if valid socket descriptor then add to read list */
-            if(sd > 0)
-                FD_SET(sd, &readfds);
+            		/* if valid socket descriptor then add to read list */
+            		if(sd > 0)
+                	FD_SET(sd, &readfds);
              
-            /* highest file descriptor number, need it for the select function */
-            if(sd > max_sd)
-                max_sd = sd;
-        }
+            		/* highest file descriptor number, need it for the select function */
+            		if(sd > max_sd)
+                	max_sd = sd;
+        	}
   
 		/* wait for an activity on one of the sockets , timeout is NULL , so wait indefinitely */
-        activity = select(max_sd+1, &readfds, NULL, NULL, NULL);
+        	activity = select(max_sd+1, &readfds, NULL, NULL, NULL);
     
 		/* If something happened on the master socket , then its an incoming connection */
-        if(FD_ISSET(sockfd, &readfds))
-        {
-        	char rec[100];
-        	int check = 0;
-            clientfd = accept(sockfd, (struct sockaddr*)&dest, (socklen_t*)&addrlen);
+        	if(FD_ISSET(sockfd, &readfds))
+        	{
+        		char rec[100];
+        		int check = 0;
+            		clientfd = accept(sockfd, (struct sockaddr*)&dest, (socklen_t*)&addrlen);
 
 			recv(clientfd, rec, sizeof(rec), 0);
-printf("%s\n", rec);
+			printf("%s\n", rec);
 			
 			/* sign in '*' */
 			if(rec[0] == '*')
@@ -114,7 +112,7 @@ printf("%s\n", rec);
 				/* Connect to USER_inform */					
 				if (mysql_query(con, "SELECT * FROM USER_inform"))
    				{
-     				finish_with_error(con);
+     					finish_with_error(con);
    				}
 				result = mysql_store_result(con);	
 				
@@ -140,24 +138,24 @@ printf("%s\n", rec);
 				{
 					send(clientfd, "1\n", sizeof("1\n"), 0);
 					/* GET USER's VM inform */
-                	sprintf(q, "SELECT * FROM %sVM", id);
-                	if (mysql_query(con, q))
-               		{
-                   		finish_with_error(con);
-                	}
-                	result = mysql_store_result(con);
+                			sprintf(q, "SELECT * FROM %sVM", id);
+                			if (mysql_query(con, q))
+               				{
+                   				finish_with_error(con);
+                			}
+                			result = mysql_store_result(con);
 
-                	char VM[128];
+                			char VM[128];
 					strcpy(VM, "");
 					//strcpy(VM, "1\n");
-                	while ((row = mysql_fetch_row(result)))
-                	{
-                    	strcat(VM, row[1]);
+                			while ((row = mysql_fetch_row(result)))
+                			{
+                    				strcat(VM, row[1]);
 						strcat(VM, "\n");
-                    	printf("%s\n", row[1]);
-                	}
-                	mysql_free_result(result);
-					send(clientfd, VM, sizeof(VM), 0);
+                	    			printf("%s\n", row[1]);
+                			}
+                			mysql_free_result(result);
+					send(clientfd, VM, sizeof(VM), 0);	
 				}
 				else if(check == 2)
 				{
@@ -172,14 +170,14 @@ printf("%s\n", rec);
 			}	
 			/* create VM '!' */
 			if(rec[0] == '!')
-            {
+            		{
 				char *id, *VMname, *MEM, *RAM, *OS, q[1024];
 				extern FILE *popen();
 				MYSQL_ROW row;
 				MYSQL_RES *result;
 
-            	for(i=0; i<strlen(rec); i++)
-            		rec[i] = rec[i+1];
+            			for(i=0; i<strlen(rec); i++)
+            				rec[i] = rec[i+1];
 
 				id = strtok(rec, "+");
 				VMname = strtok(NULL, "+");
@@ -189,20 +187,20 @@ printf("%s\n", rec);
 
 				sprintf(q, "SELECT * FROM %sVM", id);
 				if (mysql_query(con, q))
-                {
-                    finish_with_error(con);
-                }
-                result = mysql_store_result(con);
+                		{
+                    			finish_with_error(con);
+               			}
+                		result = mysql_store_result(con);
 
 				while ((row = mysql_fetch_row(result)))
-                {
+                		{
 					if(strcmp(VMname, row[1]) == 0)
 					{
 						check = 1;
 						break;
 					}
-                }
-                mysql_free_result(result);
+                		}
+                		mysql_free_result(result);
 
 				if(check == 1)
 					send(clientfd, "0", sizeof("0"), 0);
@@ -214,7 +212,7 @@ printf("%s\n", rec);
 				    	finish_with_error(con);
 
 					sprintf(q, "qemu-img create -f raw /var/lib/libvirt/images/%s_%s.img %sG", id, VMname, MEM);
-    				popen(q, "r");
+    					popen(q, "r");
 
 					FILE *fp1, *fp2;
 					char ch;
@@ -228,10 +226,10 @@ printf("%s\n", rec);
 						if(strcmp(OS, "w7") == 0)
 							sprintf(q, "Win7xml/vm%d", i);
 						else if(strcmp(OS, "u") == 0)
-    						sprintf(q, "xml/vm%d", i);
-    					fp1=fopen(q, "r");
-    					while((ch=getc(fp1)) != EOF)
-       				 		fprintf(fp2, "%c", ch);
+    							sprintf(q, "xml/vm%d", i);
+    						fp1=fopen(q, "r");
+    						while((ch=getc(fp1)) != EOF)
+       				 			fprintf(fp2, "%c", ch);
 						if(i == 1)
 							fprintf(fp2, "  <name>%s_%s</name>\n", id, VMname);
 						if(i == 2)
@@ -240,10 +238,10 @@ printf("%s\n", rec);
 							fprintf(fp2, "      <source file='/var/lib/libvirt/images/%s_%s.img'/>\n", id, VMname);
 						if(i == 4)
 							fprintf(fp2, "      <target dev='%s_%s'/>\n", id, VMname);  
-    				}
+    					}
 					printf("%s_%s has been created\n", id, VMname);
 					fclose(fp1);
-      				fclose(fp2);
+      					fclose(fp2);
 
 					if(strcmp(OS, "w7") == 0)
 						sprintf(q, "virsh define Win7xml/%s_%s.xml", id, VMname);
@@ -251,7 +249,7 @@ printf("%s\n", rec);
 						sprintf(q, "virsh define xml/%s_%s.xml", id, VMname);
 					popen(q, "r");
 				}
-            }
+            		}
 			/* turn on and turn off VM '&' */
 			else if(rec[0] == '&')
 			{
@@ -260,7 +258,7 @@ printf("%s\n", rec);
 				FILE *pp;
 				
 				for(i=0; i<strlen(rec); i++)
-                    rec[i] = rec[i+1];
+                    			rec[i] = rec[i+1];
 
 				id = strtok(rec, "+");
 				VMname = strtok(NULL, "+");
@@ -356,34 +354,34 @@ printf("%s\n", rec);
 				int VMcount = 1;
 				extern FILE *popen();
 				MYSQL_ROW row;
-                MYSQL_RES *result;
+                		MYSQL_RES *result;
 
-                for(i=0; i<strlen(rec); i++)
-                    rec[i] = rec[i+1];
+                		for(i=0; i<strlen(rec); i++)
+                    			rec[i] = rec[i+1];
 
 				id = strtok(rec, "+");
 				VMname = strtok(NULL, "/");
 				sprintf(cloneVM, "%s_01", VMname);
 
 				sprintf(q, "SELECT * FROM %sVM", id);
-                if (mysql_query(con, q)) finish_with_error(con);
-                result = mysql_store_result(con);
+                		if (mysql_query(con, q)) finish_with_error(con);
+                			result = mysql_store_result(con);
 
-                while ((row = mysql_fetch_row(result)))
-                {
-                    if(strcmp(cloneVM, row[1]) == 0)
-                    {
-                        VMcount++;
+                		while ((row = mysql_fetch_row(result)))
+                		{
+                    			if(strcmp(cloneVM, row[1]) == 0)
+                    			{
+                        			VMcount++;
 						if(VMcount < 10)
 							sprintf(cloneVM, "%s_0%d", VMname, VMcount); 
 						else
 							sprintf(cloneVM, "%s_%d", VMname, VMcount);
-                    }
-                }
-                mysql_free_result(result);
+                    			}
+                		}
+               		 	mysql_free_result(result);
 	
 				sprintf(q, "INSERT INTO %sVM(VMname) VALUES('%s')", id, cloneVM);
-                if (mysql_query(con, q)) finish_with_error(con);
+                		if (mysql_query(con, q)) finish_with_error(con);
 
 				sprintf(q, "virt-clone --connect=qemu:///system -o %s_%s -n %s_%s -f /var/lib/libvirt/images/%s_%s.img", id, VMname, id, cloneVM, id, cloneVM);
 				popen(q, "r");
@@ -414,14 +412,14 @@ printf("%s\n", rec);
 				send(clientfd, "1", sizeof("1"), 0);
 			}
 			/* checking clone stat '#' */
-            else if(rec[0] == '#')
+            		else if(rec[0] == '#')
 			{
 				char *VMname, q[1024];
 				extern FILE *popen();
-                FILE *pp;
+                		FILE *pp;
 
 				for(i=0; i<strlen(rec); i++)
-                    rec[i] = rec[i+1];
+                    			rec[i] = rec[i+1];
 
 				VMname = strtok(rec, "/");
 				
@@ -434,9 +432,9 @@ printf("%s\n", rec);
 						break;
 					}
 				}
-                pclose(pp);
+                		pclose(pp);
 				if(check == 1)
-                	send(clientfd, "1", sizeof("1"), 0);
+                			send(clientfd, "1", sizeof("1"), 0);
 				else
 					send(clientfd, "0", sizeof("0"), 0);
 			}
@@ -446,7 +444,7 @@ printf("%s\n", rec);
 				char *id, *VMname, *minute, *hour, *day, *month, *week, *work, q[1024], line[1024], ch;
 				extern FILE *popen();
 				FILE *fp1, *fp2, *fp3;
-printf("%s\n", rec);
+				printf("%s\n", rec);
 
 				for(i=0; i<strlen(rec); i++)
 					rec[i] = rec[i+1];
@@ -537,7 +535,7 @@ printf("%s\n", rec);
 				while(!feof(fp1))
 				{
 					fgets(line, 1024, fp1);
-				    if(feof(fp1)) break;
+					if(feof(fp1)) break;
 					if(strstr(line, q) != NULL)
 						strcat(s, line);
 				}
@@ -550,39 +548,39 @@ printf("%s\n", rec);
 			{
 				char *id, *passwd, *Email, q[1024];
 				extern FILE *popen();
-                MYSQL_ROW row;
+                		MYSQL_ROW row;
 				MYSQL_RES *result;
 
-                for(i=0; i<strlen(rec); i++)
-                    rec[i] = rec[i+1];
+                		for(i=0; i<strlen(rec); i++)
+                    			rec[i] = rec[i+1];
 
-                id = strtok(rec, "+");
+                		id = strtok(rec, "+");
 				passwd = strtok(NULL, "+");
 				Email = strtok(NULL, "/");
 				//printf("%s %s %s\n", id, passwd, Email);
 
-                /* Connect to USER_inform */
-                if (mysql_query(con, "SELECT * FROM USER_inform"))
-                {
-                    finish_with_error(con);
-                }
-                result = mysql_store_result(con);
+                		/* Connect to USER_inform */
+                		if (mysql_query(con, "SELECT * FROM USER_inform"))
+                		{
+                    			finish_with_error(con);
+                		}
+                		result = mysql_store_result(con);
 
-                if (result == NULL)
-                {
-                    finish_with_error(con);
-                }
+                		if (result == NULL)
+                		{
+                    			finish_with_error(con);
+                		}
 
-                int num_fields = mysql_num_fields(result);
+                		int num_fields = mysql_num_fields(result);
 
-                while ((row = mysql_fetch_row(result)))
-                {
-                    if(strcmp(id, row[0]) == 0)
+                		while ((row = mysql_fetch_row(result)))
+                		{
+                    			if(strcmp(id, row[0]) == 0)
 					{
-                        check = 1;
+                        			check = 1;
 						break;
 					}
-                }
+                		}
 				mysql_free_result(result);
 
 				if(check == 0)
@@ -621,8 +619,6 @@ printf("%s\n", rec);
 
 			close(clientfd);
 		}
-
-		msg[0] = '\0';
 	}
 
 	/* close(server) , but never get here because of the loop */
